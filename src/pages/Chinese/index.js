@@ -10,8 +10,18 @@ const { TabPane } = Tabs;
 const ChinesePage = () => {
   const [selectedPinyin, setSelectedPinyin] = useState(null);
 
+  // 声母发音映射表 - 用标准教学发音
+  const shengmuPronunciation = {
+    'b': '波', 'p': '泼', 'm': '摸', 'f': '佛',
+    'd': '得', 't': '特', 'n': '讷', 'l': '勒',
+    'g': '哥', 'k': '科', 'h': '喝',
+    'j': '基', 'q': '七', 'x': '西',
+    'zh': '知', 'ch': '吃', 'sh': '诗', 'r': '日',
+    'z': '资', 'c': '次', 's': '思',
+    'y': '衣', 'w': '乌'
+  };
+
   // 朗读拼音（使用 Web Speech API）
-  // 传入汉字时直接朗读汉字，传入拼音时查找对应汉字朗读
   const speakPinyin = useCallback((text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -20,21 +30,25 @@ const ChinesePage = () => {
       const isChineseChar = /[\u4e00-\u9fa5]/.test(text);
       let textToSpeak = text;
 
-      // 如果是纯拼音，查找对应的汉字
       if (!isChineseChar) {
-        // 遍历所有分类查找对应的汉字
-        for (const category of Object.keys(pinyinData)) {
-          const item = pinyinData[category].find(p => p.pinyin === text);
-          if (item && item.words && item.words.length > 0) {
-            textToSpeak = item.words[0]; // 使用第一个例字发音
-            break;
+        // 检查是否为声母，使用声母发音表
+        if (shengmuPronunciation[text]) {
+          textToSpeak = shengmuPronunciation[text];
+        } else {
+          // 查找韵母或整体认读音节对应的汉字
+          for (const category of Object.keys(pinyinData)) {
+            const item = pinyinData[category].find(p => p.pinyin === text);
+            if (item && item.words && item.words.length > 0) {
+              textToSpeak = item.words[0];
+              break;
+            }
           }
         }
       }
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'zh-CN';
-      utterance.rate = 0.6;
+      utterance.rate = 0.5;
       window.speechSynthesis.speak(utterance);
     } else {
       message.warning('您的浏览器不支持语音功能');
