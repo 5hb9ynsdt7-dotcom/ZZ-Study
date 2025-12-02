@@ -10,50 +10,71 @@ const { TabPane } = Tabs;
 const ChinesePage = () => {
   const [selectedPinyin, setSelectedPinyin] = useState(null);
 
-  // 声母发音映射表 - 用标准教学发音
-  const shengmuPronunciation = {
+  // 拼音发音映射表 - 使用标准教学发音
+  const pinyinPronunciation = {
+    // 声母
     'b': '波', 'p': '泼', 'm': '摸', 'f': '佛',
     'd': '得', 't': '特', 'n': '讷', 'l': '勒',
     'g': '哥', 'k': '科', 'h': '喝',
     'j': '基', 'q': '七', 'x': '西',
     'zh': '知', 'ch': '吃', 'sh': '诗', 'r': '日',
     'z': '资', 'c': '次', 's': '思',
-    'y': '衣', 'w': '乌'
+    'y': '衣', 'w': '乌',
+    // 单韵母
+    'a': '啊', 'o': '喔', 'e': '鹅', 'i': '衣', 'u': '乌', 'ü': '鱼',
+    // 复韵母
+    'ai': '哎', 'ei': '诶', 'ui': '威', 'ao': '奥', 'ou': '欧',
+    'iu': '优', 'ie': '耶', 'üe': '约', 'er': '儿',
+    // 前鼻韵母
+    'an': '安', 'en': '恩', 'in': '因', 'un': '温', 'ün': '晕',
+    // 后鼻韵母
+    'ang': '昂', 'eng': '鞥', 'ing': '英', 'ong': '翁',
+    // 整体认读音节
+    'zhi': '知', 'chi': '吃', 'shi': '诗', 'ri': '日',
+    'zi': '资', 'ci': '次', 'si': '思',
+    'yi': '衣', 'wu': '乌', 'yu': '鱼',
+    'ye': '耶', 'yue': '月', 'yuan': '圆',
+    'yin': '因', 'yun': '云', 'ying': '英'
   };
 
-  // 朗读拼音（使用 Web Speech API）
+  // 获取最佳中文语音
+  const getChineseVoice = useCallback(() => {
+    const voices = window.speechSynthesis.getVoices();
+    // 优先选择更自然的语音
+    const preferredVoices = [
+      'Tingting', 'Ting-Ting', // macOS
+      'Huihui', 'Yaoyao', // Windows
+      'Google 普通话', 'Google 中文'
+    ];
+    for (const preferred of preferredVoices) {
+      const voice = voices.find(v => v.name.includes(preferred) && v.lang.includes('zh'));
+      if (voice) return voice;
+    }
+    // 回退到任何中文语音
+    return voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh_CN'));
+  }, []);
+
+  // 朗读拼音
   const speakPinyin = useCallback((text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
 
-      // 检查是否为汉字（直接朗读）
       const isChineseChar = /[\u4e00-\u9fa5]/.test(text);
-      let textToSpeak = text;
-
-      if (!isChineseChar) {
-        // 检查是否为声母，使用声母发音表
-        if (shengmuPronunciation[text]) {
-          textToSpeak = shengmuPronunciation[text];
-        } else {
-          // 查找韵母或整体认读音节对应的汉字
-          for (const category of Object.keys(pinyinData)) {
-            const item = pinyinData[category].find(p => p.pinyin === text);
-            if (item && item.words && item.words.length > 0) {
-              textToSpeak = item.words[0];
-              break;
-            }
-          }
-        }
-      }
+      let textToSpeak = isChineseChar ? text : (pinyinPronunciation[text] || text);
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'zh-CN';
-      utterance.rate = 0.5;
+      utterance.rate = 0.7;
+      utterance.pitch = 1.0;
+
+      const voice = getChineseVoice();
+      if (voice) utterance.voice = voice;
+
       window.speechSynthesis.speak(utterance);
     } else {
       message.warning('您的浏览器不支持语音功能');
     }
-  }, []);
+  }, [getChineseVoice]);
 
   // 渲染拼音卡片
   const renderPinyinCard = (item, index) => (
