@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Progress, message, Typography, Row, Col, Statistic, Space, Tag } from 'antd';
-import { SoundOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, TrophyOutlined, EditOutlined, AudioOutlined, BookOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { SoundOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, TrophyOutlined, EditOutlined, AudioOutlined, BookOutlined, QuestionCircleOutlined, CustomerServiceOutlined, EyeOutlined } from '@ant-design/icons';
 import wordsData from '../../data/words';
 import './style.css';
 
@@ -56,6 +56,9 @@ const EnglishPage = () => {
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [fillBlankAnswer, setFillBlankAnswer] = useState(null);
   const [puzzleInput, setPuzzleInput] = useState('');
+  // Read-along practice
+  const [readAlongSentences, setReadAlongSentences] = useState([]);
+  const [readAlongShowText, setReadAlongShowText] = useState(false);
   const voicesLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -190,14 +193,20 @@ const EnglishPage = () => {
     }
   };
 
+  // Helper: get modules from syllables string (e.g., "ad-ven-ture" -> ["ad", "ven", "ture"])
+  const getModulesFromWord = (word) => {
+    return word.syllables ? word.syllables.split('-') : [word.word];
+  };
+
   const generateCombinationModules = (currentWord, allWords) => {
-    const correctModules = currentWord.modules;
+    const correctModules = getModulesFromWord(currentWord);
     const distractors = ['ing', 'tion', 'ness', 'ful', 'less', 'pre', 'un', 'dis', 'er', 'est', 'ly', 'ment'];
 
-    // Get distractors from other words' modules
+    // Get distractors from other words' modules (derived from syllables)
     allWords.forEach(item => {
       if (item !== currentWord) {
-        item.modules.forEach(m => {
+        const itemModules = getModulesFromWord(item);
+        itemModules.forEach(m => {
           if (!correctModules.includes(m) && !distractors.includes(m)) {
             distractors.push(m);
           }
@@ -216,10 +225,11 @@ const EnglishPage = () => {
   };
 
   const startLongWordPractice = () => {
-    const longWords = wordsData.long_words;
-    const teaching = [...longWords.teaching].sort(() => Math.random() - 0.5).slice(0, 3);
-    const decoding = [...longWords.decoding].sort(() => Math.random() - 0.5).slice(0, 5);
-    const combination = [...longWords.combination].sort(() => Math.random() - 0.5).slice(0, 5);
+    // Shuffle unified word pool and pick unique words for each stage
+    const shuffled = [...wordsData.long_words].sort(() => Math.random() - 0.5);
+    const teaching = shuffled.slice(0, 3);
+    const decoding = shuffled.slice(3, 8);
+    const combination = shuffled.slice(8, 13);
 
     setLongWordData({ teaching, decoding, combination });
     setLongWordStage(1);
@@ -416,31 +426,35 @@ const EnglishPage = () => {
   };
 
   const startIrregularPractice = () => {
-    const irregular = wordsData.irregular_words;
-    // Get all words from all categories
-    const allWords = [
-      ...irregular.completely_irregular,
-      ...irregular.special_vowels,
-      ...irregular.silent_consonants,
-      ...irregular.heteronyms,
-    ];
-    // Select 10 random words for today's practice
-    const shuffledWords = [...allWords].sort(() => Math.random() - 0.5).slice(0, 10);
+    // Shuffle unified word pool and pick unique words for each stage
+    const shuffled = [...wordsData.irregular_words].sort(() => Math.random() - 0.5);
 
-    // Prepare matching pairs (5 pairs)
-    const matchingWords = shuffledWords.slice(0, 5);
+    // Stage 1: Matching (5 words)
+    const matchingWords = shuffled.slice(0, 5);
     const leftItems = matchingWords.map((w, i) => ({ id: i, type: 'word', value: w.word, pairId: i }));
     const rightItems = matchingWords.map((w, i) => ({ id: i + 5, type: 'meaning', value: w.meaning, pairId: i }));
     const shuffledRight = [...rightItems].sort(() => Math.random() - 0.5);
 
-    // Prepare fill-in-the-blank (select from pool)
-    const fillSentences = [...irregular.fill_sentences].sort(() => Math.random() - 0.5).slice(0, 5);
+    // Stage 2: Fill-in-the-blank (5 different words, generate from word data)
+    const fillWords = shuffled.slice(5, 10);
+    const fillSentences = fillWords.map(w => ({
+      sentence: w.sentence.replace(new RegExp(w.word, 'gi'), '______'),
+      answer: w.word,
+      meaning: w.meaning,
+      note: w.note,
+    }));
 
-    // Prepare puzzles
-    const puzzles = [...irregular.puzzles].sort(() => Math.random() - 0.5).slice(0, 5);
+    // Stage 3: Puzzles (5 different words, generate scrambled letters)
+    const puzzleWords = shuffled.slice(10, 15);
+    const puzzles = puzzleWords.map(w => ({
+      hint: w.meaning,
+      answer: w.word,
+      scrambled: w.word.split('').sort(() => Math.random() - 0.5).join(''),
+      note: w.note,
+    }));
 
     setIrregularData({
-      words: shuffledWords,
+      words: shuffled.slice(0, 15),
       matching: { left: leftItems, right: shuffledRight },
       fillBlank: fillSentences,
       puzzles: puzzles,
@@ -456,6 +470,32 @@ const EnglishPage = () => {
     setAnswers([]);
     setPracticeType('irregular');
     setMode('practice');
+  };
+
+  const startReadAlongPractice = (dayNum = null) => {
+    // If no dayNum provided, use today's date
+    if (dayNum === null) {
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+      dayNum = (dayOfYear % 14) + 1;
+    }
+
+    const todaySentences = wordsData.read_along_sentences.filter(s => s.day === dayNum);
+
+    setReadAlongSentences(todaySentences);
+    setCurrentIndex(0);
+    setReadAlongShowText(false);
+    setAnswers([]);
+    setPracticeType('readalong');
+    setMode('practice');
+  };
+
+  const shuffleReadAlongPractice = () => {
+    // Get current day to pick a different one
+    const currentDay = readAlongSentences[0]?.day || 1;
+    const availableDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter(d => d !== currentDay);
+    const randomDay = availableDays[Math.floor(Math.random() * availableDays.length)];
+    startReadAlongPractice(randomDay);
   };
 
   const handleMatchingClick = (item, side) => {
@@ -503,13 +543,13 @@ const EnglishPage = () => {
 
   const checkPuzzleAnswer = () => {
     const current = irregularData.puzzles[currentIndex];
-    const isCorrect = puzzleInput.toLowerCase().trim() === current.word.toLowerCase();
+    const isCorrect = puzzleInput.toLowerCase().trim() === current.answer.toLowerCase();
     setShowAnswer(true);
-    setAnswers([...answers, { question: current.hint, userAnswer: puzzleInput, correctAnswer: current.word, isCorrect }]);
+    setAnswers([...answers, { question: current.hint, userAnswer: puzzleInput, correctAnswer: current.answer, isCorrect }]);
     if (isCorrect) {
       message.success('太棒了！');
     } else {
-      message.error(`正确答案是：${current.word}`);
+      message.error(`正确答案是：${current.answer}`);
     }
   };
 
@@ -574,6 +614,12 @@ const EnglishPage = () => {
           <QuestionCircleOutlined className="practice-type-icon" style={{ color: '#eb2f96' }} />
           <Title level={4}>不规则词</Title>
           <Text type="secondary">高频视觉词练习</Text>
+        </Card>
+
+        <Card className="practice-type-card" hoverable onClick={() => startReadAlongPractice()}>
+          <CustomerServiceOutlined className="practice-type-icon" style={{ color: '#722ed1' }} />
+          <Title level={4}>跟读练习</Title>
+          <Text type="secondary">每日10句跟读</Text>
         </Card>
       </div>
     </div>
@@ -1104,6 +1150,150 @@ const EnglishPage = () => {
     </div>
   );
 
+  const renderReadAlongPractice = () => {
+    const currentSentence = readAlongSentences[currentIndex];
+    if (!currentSentence) {
+      return (
+        <div className="english-practice" style={{ textAlign: 'center', padding: '48px' }}>
+          <Text>加载中...</Text>
+          <br /><br />
+          <Button onClick={() => setMode('menu')}>返回菜单</Button>
+        </div>
+      );
+    }
+
+    const levelInfo = {
+      review: { name: '复习', color: '#52c41a', icon: '🔄' },
+      core: { name: '核心', color: '#1890ff', icon: '⭐' },
+      challenge: { name: '挑战', color: '#fa8c16', icon: '🚀' },
+    };
+
+    const themeInfo = {
+      cars: '小汽车',
+      peppa: 'Peppa Pig',
+      drawing: '画画',
+      daily: '日常生活',
+      animals: '动物',
+      nature: '自然',
+      food: '食物',
+    };
+
+    const level = levelInfo[currentSentence.level];
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const dayNum = (dayOfYear % 14) + 1;
+
+    const handleNext = () => {
+      if (currentIndex < readAlongSentences.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+        setReadAlongShowText(false);
+        setAnswers([...answers, { completed: true }]);
+      } else {
+        setAnswers([...answers, { completed: true }]);
+        setMode('readalong-result');
+      }
+    };
+
+    return (
+      <div className="english-practice">
+        <div className="practice-header">
+          <Button onClick={() => setMode('menu')}>返回</Button>
+          <div className="stage-indicator">
+            <Tag color={level.color}>{level.icon} {level.name}</Tag>
+            <Tag color="purple">{themeInfo[currentSentence.theme]}</Tag>
+          </div>
+          <Button icon={<ReloadOutlined />} onClick={shuffleReadAlongPractice}>换一批</Button>
+        </div>
+        <Progress percent={Math.round(((currentIndex + 1) / readAlongSentences.length) * 100)} />
+
+        <Card className="practice-card readalong-card">
+          <div className="readalong-content">
+            <div className="sentence-number">
+              第 {currentIndex + 1} / {readAlongSentences.length} 句
+            </div>
+
+            <div className="readalong-instruction">
+              <Text type="secondary">点击播放按钮，仔细听句子，然后跟读</Text>
+            </div>
+
+            <div className="readalong-play-area">
+              <Button
+                type="primary"
+                shape="circle"
+                size="large"
+                icon={<SoundOutlined />}
+                className="play-sentence-btn"
+                onClick={() => speak(currentSentence.sentence, 0.8)}
+                style={{ width: 80, height: 80, fontSize: 32 }}
+              />
+              <div className="play-hint">点击播放</div>
+            </div>
+
+            {!readAlongShowText && (
+              <Button
+                type="default"
+                size="large"
+                icon={<EyeOutlined />}
+                onClick={() => setReadAlongShowText(true)}
+                style={{ marginTop: 24 }}
+              >
+                查看原文
+              </Button>
+            )}
+
+            {readAlongShowText && (
+              <div className="sentence-reveal">
+                <div className="sentence-text">{currentSentence.sentence}</div>
+                <div className="sentence-meaning">{currentSentence.meaning}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="readalong-actions">
+            <Button type="primary" size="large" onClick={handleNext}>
+              {currentIndex < readAlongSentences.length - 1 ? '下一句' : '完成练习'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderReadAlongResult = () => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+    const dayNum = (dayOfYear % 14) + 1;
+
+    return (
+      <div className="english-result">
+        <Card className="result-card">
+          <div className="result-header">
+            <TrophyOutlined className="trophy-icon" />
+            <Title level={2}>跟读完成！</Title>
+          </div>
+          <div className="result-message">
+            <Text type="success" style={{ fontSize: 24 }}>太棒了！今天的跟读练习完成啦！</Text>
+          </div>
+          <Row gutter={24} style={{ marginTop: 24 }}>
+            <Col span={8}>
+              <Statistic title="今日" value={`第 ${dayNum} 天`} />
+            </Col>
+            <Col span={8}>
+              <Statistic title="完成句子" value={readAlongSentences.length} suffix="句" />
+            </Col>
+            <Col span={8}>
+              <Statistic title="完成率" value={100} suffix="%" />
+            </Col>
+          </Row>
+          <Space style={{ marginTop: 24 }}>
+            <Button type="primary" size="large" icon={<ReloadOutlined />} onClick={startReadAlongPractice}>再练一次</Button>
+            <Button size="large" onClick={() => setMode('menu')}>返回菜单</Button>
+          </Space>
+        </Card>
+      </div>
+    );
+  };
+
   return (
     <div className="english-page">
       {mode === 'menu' && renderMainMenu()}
@@ -1113,9 +1303,11 @@ const EnglishPage = () => {
       {mode === 'practice' && practiceType === 'fillblank' && renderFillBlankPractice()}
       {mode === 'practice' && practiceType === 'longword' && renderLongWordPractice()}
       {mode === 'practice' && practiceType === 'irregular' && renderIrregularPractice()}
+      {mode === 'practice' && practiceType === 'readalong' && renderReadAlongPractice()}
       {mode === 'result' && renderResult()}
       {mode === 'longword-result' && renderLongWordResult()}
       {mode === 'irregular-result' && renderIrregularResult()}
+      {mode === 'readalong-result' && renderReadAlongResult()}
     </div>
   );
 };
