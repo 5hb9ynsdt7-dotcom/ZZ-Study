@@ -11,10 +11,28 @@ const ChinesePage = () => {
   const [selectedPinyin, setSelectedPinyin] = useState(null);
 
   // 朗读拼音（使用 Web Speech API）
-  const speakPinyin = useCallback((pinyin) => {
+  // 传入汉字时直接朗读汉字，传入拼音时查找对应汉字朗读
+  const speakPinyin = useCallback((text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(pinyin);
+
+      // 检查是否为汉字（直接朗读）
+      const isChineseChar = /[\u4e00-\u9fa5]/.test(text);
+      let textToSpeak = text;
+
+      // 如果是纯拼音，查找对应的汉字
+      if (!isChineseChar) {
+        // 遍历所有分类查找对应的汉字
+        for (const category of Object.keys(pinyinData)) {
+          const item = pinyinData[category].find(p => p.pinyin === text);
+          if (item && item.words && item.words.length > 0) {
+            textToSpeak = item.words[0]; // 使用第一个例字发音
+            break;
+          }
+        }
+      }
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'zh-CN';
       utterance.rate = 0.6;
       window.speechSynthesis.speak(utterance);
