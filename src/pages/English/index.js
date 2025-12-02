@@ -1179,9 +1179,6 @@ const EnglishPage = () => {
     };
 
     const level = levelInfo[currentSentence.level];
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-    const dayNum = (dayOfYear % 14) + 1;
 
     const handleNext = () => {
       if (currentIndex < readAlongSentences.length - 1) {
