@@ -1,0 +1,159 @@
+.math-page {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.math-menu {
+  text-align: center;
+}
+
+.practice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.practice-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.question-area {
+  padding: 24px;
+}
+
+.math-question {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 48px;
+  font-weight: bold;
+  margin: 32px 0;
+}
+
+.math-question .number {
+  color: #1890ff;
+  min-width: 80px;
+}
+
+.math-question .operator {
+  color: #52c41a;
+}
+
+.math-question .equals {
+  color: #666;
+}
+
+.math-question .answer-input {
+  width: 120px;
+  font-size: 36px;
+  text-align: center;
+  height: 60px;
+}
+
+.math-question .answer-input input {
+  text-align: center;
+  font-size: 36px;
+}
+
+.answer-feedback {
+  margin-top: 24px;
+  padding: 24px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.feedback-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.feedback-icon.correct {
+  color: #52c41a;
+}
+
+.feedback-icon.wrong {
+  color: #ff4d4f;
+}
+
+.correct-answer {
+  margin: 16px 0;
+}
+
+.math-result {
+  text-align: center;
+}
+
+.result-card {
+  padding: 24px;
+}
+
+.result-header {
+  margin-bottom: 24px;
+}
+
+.trophy-icon {
+  font-size: 64px;
+  color: #faad14;
+  margin-bottom: 16px;
+}
+
+.result-message {
+  margin: 24px 0;
+}
+
+.answer-list {
+  margin-top: 24px;
+  text-align: left;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.answer-item.correct {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+}
+
+.answer-item.wrong {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+}
+
+.answer-icon {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.answer-item.correct .answer-icon {
+  color: #52c41a;
+}
+
+.answer-item.wrong .answer-icon {
+  color: #ff4d4f;
+}
+
+.answer-question {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.answer-user {
+  color: #333;
+  margin-right: 8px;
+}
+
+.answer-correct {
+  color: #52c41a;
+}

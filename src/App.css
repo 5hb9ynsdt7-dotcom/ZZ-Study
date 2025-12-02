@@ -1,38 +1,129 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.logo {
+  height: 64px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+  background: #f0f5ff;
+  margin: 16px;
+  border-radius: 8px;
 }
 
-.App-link {
-  color: #61dafb;
+.app-header {
+  background: linear-gradient(135deg, #1890ff 0%, #52c41a 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.app-content {
+  margin: 24px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  min-height: calc(100vh - 64px - 70px - 48px);
+}
+
+.app-footer {
+  text-align: center;
+  color: #999;
+}
+
+/* Home Page */
+.home-page {
+  text-align: center;
+  padding: 24px;
+}
+
+.welcome-section {
+  margin-bottom: 48px;
+}
+
+.welcome-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.welcome-text {
+  font-size: 20px;
+  color: #666;
+}
+
+.subject-grid {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.subject-card {
+  width: 200px;
+  padding: 32px 24px;
+  background: #fff;
+  border: 3px solid #ddd;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.subject-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.subject-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.subject-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.subject-desc {
+  color: #999;
+  font-size: 14px;
+}
+
+.tips-section {
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.tips-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tips-section li {
+  margin: 8px 0;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .subject-grid {
+    flex-direction: column;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+
+  .subject-card {
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .app-content {
+    margin: 12px;
+    padding: 12px;
   }
 }

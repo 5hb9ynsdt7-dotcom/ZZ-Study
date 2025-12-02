@@ -1,0 +1,147 @@
+.chinese-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.pinyin-card {
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.pinyin-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pinyin-card.selected {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.pinyin-main {
+  font-size: 36px;
+  font-weight: bold;
+  color: #1890ff;
+  padding: 16px 0;
+}
+
+.sound-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #999;
+}
+
+.sound-btn:hover {
+  color: #1890ff;
+}
+
+.pinyin-detail {
+  margin-top: 16px;
+}
+
+.detail-content {
+  text-align: center;
+}
+
+.detail-pinyin {
+  font-size: 72px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.detail-example {
+  font-size: 18px;
+  margin: 16px 0;
+}
+
+.detail-words {
+  margin-top: 16px;
+}
+
+.word-tags {
+  margin-top: 8px;
+}
+
+.word-tag {
+  font-size: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin: 4px;
+}
+
+.word-tag:hover {
+  transform: scale(1.1);
+}
+
+.pinyin-overview {
+  padding: 16px;
+}
+
+.overview-section {
+  margin-bottom: 24px;
+}
+
+.overview-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.overview-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: #f0f5ff;
+  border: 1px solid #adc6ff;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.overview-item:hover {
+  background: #1890ff;
+  color: white;
+  transform: scale(1.1);
+}
+
+.overview-item.vowel {
+  background: #fff7e6;
+  border-color: #ffd591;
+  color: #fa8c16;
+}
+
+.overview-item.vowel:hover {
+  background: #fa8c16;
+  color: white;
+}
+
+.overview-item.special {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+  color: #52c41a;
+  width: 60px;
+}
+
+.overview-item.special:hover {
+  background: #52c41a;
+  color: white;
+}
+
+.category-content {
+  min-height: 400px;
+}
