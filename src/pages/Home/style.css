@@ -1,0 +1,91 @@
+/* Home Page */
+.home-page {
+  text-align: center;
+  padding: 24px;
+}
+
+.welcome-section {
+  margin-bottom: 48px;
+}
+
+.welcome-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.welcome-text {
+  font-size: 20px;
+  color: #666;
+}
+
+.subject-grid {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+
+.subject-card {
+  width: 200px;
+  padding: 32px 24px;
+  background: #fff;
+  border: 3px solid #ddd;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.subject-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.subject-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.subject-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.subject-desc {
+  color: #999;
+  font-size: 14px;
+}
+
+.tips-section {
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.tips-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tips-section li {
+  margin: 8px 0;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .subject-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .subject-card {
+    width: 90%;
+    max-width: 300px;
+  }
+}

@@ -1,34 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Button, Progress, message, Typography, Row, Col, Statistic, Space, Tag } from 'antd';
 import { SoundOutlined, CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, TrophyOutlined, EditOutlined, AudioOutlined, BookOutlined, QuestionCircleOutlined, CustomerServiceOutlined, EyeOutlined } from '@ant-design/icons';
 import wordsData from '../../data/words';
+import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
+import { CATEGORY_INFO, SPEECH_CONFIG, SCORE_THRESHOLDS } from '../../constants';
 import './style.css';
 
 const { Title, Text } = Typography;
-
-const categoryInfo = {
-  short_a: { name: '短元音 a', example: 'cat, hat, map', color: '#1890ff' },
-  short_e: { name: '短元音 e', example: 'bed, pen, red', color: '#52c41a' },
-  short_i: { name: '短元音 i', example: 'pig, big, sit', color: '#fa8c16' },
-  short_o: { name: '短元音 o', example: 'dog, hot, top', color: '#eb2f96' },
-  short_u: { name: '短元音 u', example: 'bus, cup, sun', color: '#722ed1' },
-  long_a_e: { name: '长元音 a-e', example: 'cake, make, name', color: '#13c2c2' },
-  long_i_e: { name: '长元音 i-e', example: 'bike, like, time', color: '#2f54eb' },
-  long_o_e: { name: '长元音 o-e', example: 'home, bone, hope', color: '#fa541c' },
-  long_u_e: { name: '长元音 u-e', example: 'cute, tube, rule', color: '#a0d911' },
-  vowel_ai_ay: { name: '元音 ai/ay', example: 'rain, day, play', color: '#597ef7' },
-  vowel_ee_ea: { name: '元音 ee/ea', example: 'see, tree, eat', color: '#73d13d' },
-  vowel_oa_ow: { name: '元音 oa/ow', example: 'boat, snow, grow', color: '#ff7875' },
-  vowel_igh: { name: '元音 igh', example: 'night, light, high', color: '#ffc53d' },
-  r_controlled_ar: { name: 'R控制 ar', example: 'car, star, park', color: '#ff85c0' },
-  r_controlled_er_ir_ur: { name: 'R控制 er/ir/ur', example: 'her, bird, turn', color: '#5cdbd3' },
-  r_controlled_or: { name: 'R控制 or', example: 'for, corn, horse', color: '#b37feb' },
-  diphthong_oi_oy: { name: '双元音 oi/oy', example: 'oil, coin, boy', color: '#ffa940' },
-  diphthong_ou_ow: { name: '双元音 ou/ow', example: 'out, house, cow', color: '#36cfc9' },
-  diphthong_au_aw: { name: '双元音 au/aw', example: 'saw, draw, cause', color: '#9254de' },
-  vowel_oo_long: { name: '长音 oo', example: 'zoo, moon, food', color: '#69b1ff' },
-  vowel_oo_short: { name: '短音 oo', example: 'book, look, good', color: '#95de64' },
-};
 
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 
@@ -59,76 +37,25 @@ const EnglishPage = () => {
   // Read-along practice
   const [readAlongSentences, setReadAlongSentences] = useState([]);
   const [readAlongShowText, setReadAlongShowText] = useState(false);
-  const voicesLoadedRef = useRef(false);
+  
+  const { speak, speakSequentially, voicesLoaded } = useSpeechSynthesis('en-US');
 
-  useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-        voicesLoadedRef.current = true;
-      }
-    };
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    return () => { window.speechSynthesis.onvoiceschanged = null; };
-  }, []);
-
-  const getBestVoice = useCallback(() => {
-    const preferredVoices = ['Samantha', 'Alex', 'Google US English', 'Microsoft David', 'Microsoft Zira'];
-    for (const name of preferredVoices) {
-      const voice = voices.find(v => v.name.includes(name));
-      if (voice) return voice;
-    }
-    const usVoice = voices.find(v => v.lang === 'en-US' || v.lang.startsWith('en-US'));
-    if (usVoice) return usVoice;
-    return voices.find(v => v.lang.startsWith('en')) || null;
-  }, [voices]);
-
-  const speak = useCallback((text, rate = 0.75) => {
-    if (!('speechSynthesis' in window)) {
-      message.warning('您的浏览器不支持语音功能');
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const bestVoice = getBestVoice();
-    if (bestVoice) utterance.voice = bestVoice;
-    utterance.lang = 'en-US';
-    utterance.rate = rate;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    window.speechSynthesis.speak(utterance);
-  }, [getBestVoice]);
+  const speakWord = useCallback((text, rate = 0.75) => {
+    speak(text, {
+      rate,
+      preferredVoices: SPEECH_CONFIG.ENGLISH.preferredVoices,
+    });
+  }, [speak]);
 
   const speakSyllables = useCallback((syllables, word) => {
-    if (!('speechSynthesis' in window)) {
-      message.warning('您的浏览器不支持语音功能');
-      return;
-    }
-    window.speechSynthesis.cancel();
     const parts = syllables.split('-');
-    let delay = 0;
-    parts.forEach((part) => {
-      setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(part);
-        const bestVoice = getBestVoice();
-        if (bestVoice) utterance.voice = bestVoice;
-        utterance.lang = 'en-US';
-        utterance.rate = 0.5;
-        window.speechSynthesis.speak(utterance);
-      }, delay);
-      delay += 600;
+    const texts = [...parts, word];
+    speakSequentially(texts, {
+      delay: 600,
+      rate: 0.5,
+      preferredVoices: SPEECH_CONFIG.ENGLISH.preferredVoices,
     });
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(word);
-      const bestVoice = getBestVoice();
-      if (bestVoice) utterance.voice = bestVoice;
-      utterance.lang = 'en-US';
-      utterance.rate = 0.7;
-      window.speechSynthesis.speak(utterance);
-    }, delay + 400);
-  }, [getBestVoice]);
+  }, [speakSequentially]);
 
   const generateOptions = useCallback((correctWord, allWords) => {
     const otherWords = allWords.filter(w => w.word !== correctWord.word);
@@ -164,9 +91,9 @@ const EnglishPage = () => {
     );
   };
 
-  const selectAllCategories = () => {
-    setSelectedCategories(Object.keys(categoryInfo));
-  };
+  const selectAllCategories = useCallback(() => {
+    setSelectedCategories(Object.keys(CATEGORY_INFO));
+  }, []);
 
   const startPractice = (categories, type) => {
     let words = [];
@@ -265,10 +192,10 @@ const EnglishPage = () => {
   }, [mode, currentIndex, currentWord, practiceWords, selectedCategories, generateOptions, generateBlankInfo, practiceType]);
 
   useEffect(() => {
-    if (mode === 'practice' && currentWord && !showAnswer && voicesLoadedRef.current && practiceType !== 'longword') {
-      setTimeout(() => speak(currentWord.word), 500);
+    if (mode === 'practice' && currentWord && !showAnswer && voicesLoaded && practiceType !== 'longword') {
+      setTimeout(() => speakWord(currentWord.word), 500);
     }
-  }, [mode, currentIndex, currentWord, showAnswer, speak, practiceType]);
+  }, [mode, currentIndex, currentWord, showAnswer, speakWord, practiceType, voicesLoaded]);
 
   const selectAnswer = (answer) => {
     if (showAnswer) return;
@@ -299,7 +226,11 @@ const EnglishPage = () => {
     }
   };
 
-  const replay = () => speak(currentWord.word);
+  const replay = useCallback(() => {
+    if (currentWord) {
+      speakWord(currentWord.word);
+    }
+  }, [currentWord, speakWord]);
 
   const phonicsToSound = (part) => {
     const soundMap = {
@@ -325,32 +256,16 @@ const EnglishPage = () => {
     return soundMap[part.toLowerCase()] || part;
   };
 
-  const speakPhonics = (phonics, word) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
+  const speakPhonics = useCallback((phonics, word) => {
     const parts = phonics.split('-');
-    let delay = 0;
-    parts.forEach((part) => {
-      setTimeout(() => {
-        const sound = phonicsToSound(part);
-        const utterance = new SpeechSynthesisUtterance(sound);
-        const bestVoice = getBestVoice();
-        if (bestVoice) utterance.voice = bestVoice;
-        utterance.lang = 'en-US';
-        utterance.rate = 0.6;
-        window.speechSynthesis.speak(utterance);
-      }, delay);
-      delay += 700;
+    const sounds = parts.map(part => phonicsToSound(part));
+    const texts = [...sounds, word];
+    speakSequentially(texts, {
+      delay: 700,
+      rate: 0.6,
+      preferredVoices: SPEECH_CONFIG.ENGLISH.preferredVoices,
     });
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(word);
-      const bestVoice = getBestVoice();
-      if (bestVoice) utterance.voice = bestVoice;
-      utterance.lang = 'en-US';
-      utterance.rate = 0.7;
-      window.speechSynthesis.speak(utterance);
-    }, delay + 300);
-  };
+  }, [speakSequentially]);
 
   const getScore = () => {
     const correct = answers.filter(a => a.isCorrect).length;
@@ -634,7 +549,7 @@ const EnglishPage = () => {
       <Text type="secondary">选择要练习的拼读规则</Text>
 
       <div className="category-grid">
-        {Object.entries(categoryInfo).map(([key, info]) => (
+        {Object.entries(CATEGORY_INFO).map(([key, info]) => (
           <div
             key={key}
             className={`category-card ${selectedCategories.includes(key) ? 'selected' : ''}`}
@@ -653,7 +568,7 @@ const EnglishPage = () => {
           <Button type="primary" size="large" disabled={selectedCategories.length === 0} onClick={() => startPractice(selectedCategories, type)}>
             开始练习 ({selectedCategories.length} 个规则)
           </Button>
-          <Button size="large" onClick={() => { selectAllCategories(); startPractice(Object.keys(categoryInfo), type); }}>
+          <Button size="large" onClick={() => { selectAllCategories(); startPractice(Object.keys(CATEGORY_INFO), type); }}>
             综合练习 (全部规则)
           </Button>
         </Space>
@@ -701,7 +616,7 @@ const EnglishPage = () => {
                   <Button type="primary" icon={<SoundOutlined />} size="large" onClick={() => speakSyllables(currentItem.syllables, currentItem.word)}>
                     听音节拼读
                   </Button>
-                  <Button icon={<SoundOutlined />} size="large" onClick={() => speak(currentItem.word, 0.6)}>
+                  <Button icon={<SoundOutlined />} size="large" onClick={() => speakWord(currentItem.word, 0.6)}>
                     听完整发音
                   </Button>
                 </div>
@@ -744,7 +659,7 @@ const EnglishPage = () => {
               <>
                 <div className="combination-question">
                   <Text>听发音，用下方音节模块拼出单词：</Text>
-                  <Button type="link" icon={<SoundOutlined />} onClick={() => speak(currentItem.word, 0.6)} style={{ fontSize: 18 }}>
+                  <Button type="link" icon={<SoundOutlined />} onClick={() => speakWord(currentItem.word, 0.6)} style={{ fontSize: 18 }}>
                     播放发音
                   </Button>
                   <div className="longword-meaning">({currentItem.meaning})</div>
@@ -932,8 +847,8 @@ const EnglishPage = () => {
             <Col><Statistic title="正确率" value={score.percentage} suffix="%" valueStyle={{ color: score.percentage >= 80 ? '#52c41a' : '#faad14' }} /></Col>
           </Row>
           <div className="result-message">
-            {score.percentage >= 90 ? <Text type="success" style={{ fontSize: 24 }}>太棒了！你是英语小天才！</Text>
-              : score.percentage >= 70 ? <Text style={{ fontSize: 24, color: '#faad14' }}>不错哦！继续加油！</Text>
+            {score.percentage >= SCORE_THRESHOLDS.EXCELLENT ? <Text type="success" style={{ fontSize: 24 }}>太棒了！你是英语小天才！</Text>
+              : score.percentage >= SCORE_THRESHOLDS.GOOD ? <Text style={{ fontSize: 24, color: '#faad14' }}>不错哦！继续加油！</Text>
               : <Text type="secondary" style={{ fontSize: 24 }}>多多练习，你会更棒的！</Text>}
           </div>
           <div className="answer-list">
@@ -948,7 +863,7 @@ const EnglishPage = () => {
             ))}
           </div>
           <Space style={{ marginTop: 24 }}>
-            <Button type="primary" size="large" icon={<ReloadOutlined />} onClick={() => startPractice(selectedCategories.length > 0 ? selectedCategories : Object.keys(categoryInfo), practiceType)}>再来一次</Button>
+            <Button type="primary" size="large" icon={<ReloadOutlined />} onClick={() => startPractice(selectedCategories.length > 0 ? selectedCategories : Object.keys(CATEGORY_INFO), practiceType)}>再来一次</Button>
             <Button size="large" onClick={() => setMode('menu')}>返回菜单</Button>
           </Space>
         </Card>
@@ -1012,7 +927,7 @@ const EnglishPage = () => {
                       onClick={() => handleMatchingClick(item, 'left')}
                     >
                       <span className="matching-word">{item.value}</span>
-                      <Button type="link" icon={<SoundOutlined />} onClick={(e) => { e.stopPropagation(); speak(item.value); }} />
+                      <Button type="link" icon={<SoundOutlined />} onClick={(e) => { e.stopPropagation(); speakWord(item.value); }} />
                     </div>
                   ))}
                 </div>
@@ -1220,7 +1135,7 @@ const EnglishPage = () => {
                 size="large"
                 icon={<SoundOutlined />}
                 className="play-sentence-btn"
-                onClick={() => speak(currentSentence.sentence, 0.8)}
+                onClick={() => speakWord(currentSentence.sentence, 0.8)}
                 style={{ width: 80, height: 80, fontSize: 32 }}
               />
               <div className="play-hint">点击播放</div>

@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Card, Button, Input, Progress, message, Space, Typography, Row, Col, Statistic, Radio } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, ReloadOutlined, TrophyOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { DIFFICULTY_CONFIG, QUESTION_COUNTS, SCORE_THRESHOLDS } from '../../constants';
 import './style.css';
 
 const { Title, Text } = Typography;
@@ -17,41 +18,17 @@ const MathPage = () => {
 
   // 生成算术题
   const generateQuestion = useCallback((diff) => {
-    let num1, num2, operator, answer;
-
-    switch (diff) {
-      case 'easy': // 20以内加减法
-        num1 = Math.floor(Math.random() * 20) + 1;
-        num2 = Math.floor(Math.random() * 20) + 1;
-        operator = Math.random() > 0.5 ? '+' : '-';
-        if (operator === '-' && num1 < num2) {
-          [num1, num2] = [num2, num1]; // 确保结果非负
-        }
-        answer = operator === '+' ? num1 + num2 : num1 - num2;
-        break;
-
-      case 'medium': // 50以内加减法
-        num1 = Math.floor(Math.random() * 50) + 1;
-        num2 = Math.floor(Math.random() * 50) + 1;
-        operator = Math.random() > 0.5 ? '+' : '-';
-        if (operator === '-' && num1 < num2) {
-          [num1, num2] = [num2, num1];
-        }
-        answer = operator === '+' ? num1 + num2 : num1 - num2;
-        break;
-
-      case 'hard': // 100以内加减法
-      default:
-        num1 = Math.floor(Math.random() * 100) + 1;
-        num2 = Math.floor(Math.random() * 100) + 1;
-        operator = Math.random() > 0.5 ? '+' : '-';
-        if (operator === '-' && num1 < num2) {
-          [num1, num2] = [num2, num1];
-        }
-        answer = operator === '+' ? num1 + num2 : num1 - num2;
-        break;
+    const max = DIFFICULTY_CONFIG[diff]?.max || 100;
+    let num1 = Math.floor(Math.random() * max) + 1;
+    let num2 = Math.floor(Math.random() * max) + 1;
+    const operator = Math.random() > 0.5 ? '+' : '-';
+    
+    // 确保减法结果非负
+    if (operator === '-' && num1 < num2) {
+      [num1, num2] = [num2, num1];
     }
-
+    
+    const answer = operator === '+' ? num1 + num2 : num1 - num2;
     return { num1, num2, operator, answer };
   }, []);
 
@@ -120,12 +97,6 @@ const MathPage = () => {
     };
   };
 
-  // 难度配置
-  const difficultyConfig = {
-    easy: { label: '简单 (20以内)', color: '#52c41a' },
-    medium: { label: '中等 (50以内)', color: '#faad14' },
-    hard: { label: '困难 (100以内)', color: '#ff4d4f' },
-  };
 
   // 渲染菜单
   const renderMenu = () => (
@@ -140,21 +111,13 @@ const MathPage = () => {
           size="large"
           buttonStyle="solid"
         >
-          <Radio.Button value="easy">
-            <span style={{ color: difficultyConfig.easy.color }}>
-              {difficultyConfig.easy.label}
-            </span>
-          </Radio.Button>
-          <Radio.Button value="medium">
-            <span style={{ color: difficultyConfig.medium.color }}>
-              {difficultyConfig.medium.label}
-            </span>
-          </Radio.Button>
-          <Radio.Button value="hard">
-            <span style={{ color: difficultyConfig.hard.color }}>
-              {difficultyConfig.hard.label}
-            </span>
-          </Radio.Button>
+          {Object.entries(DIFFICULTY_CONFIG).map(([key, config]) => (
+            <Radio.Button key={key} value={key}>
+              <span style={{ color: config.color }}>
+                {config.label}
+              </span>
+            </Radio.Button>
+          ))}
         </Radio.Group>
       </Card>
 
@@ -164,9 +127,11 @@ const MathPage = () => {
           onChange={(e) => setTotalQuestions(e.target.value)}
           size="large"
         >
-          <Radio.Button value={10}>10题</Radio.Button>
-          <Radio.Button value={20}>20题</Radio.Button>
-          <Radio.Button value={30}>30题</Radio.Button>
+          {QUESTION_COUNTS.map(count => (
+            <Radio.Button key={count} value={count}>
+              {count}题
+            </Radio.Button>
+          ))}
         </Radio.Group>
       </Card>
 
@@ -285,9 +250,9 @@ const MathPage = () => {
           </Row>
 
           <div className="result-message">
-            {score.percentage >= 90 ? (
+            {score.percentage >= SCORE_THRESHOLDS.EXCELLENT ? (
               <Text type="success" style={{ fontSize: 18 }}>太棒了！你是数学小天才！</Text>
-            ) : score.percentage >= 70 ? (
+            ) : score.percentage >= SCORE_THRESHOLDS.GOOD ? (
               <Text style={{ fontSize: 18, color: '#faad14' }}>不错哦！继续加油！</Text>
             ) : (
               <Text type="secondary" style={{ fontSize: 18 }}>多多练习，你会更棒的！</Text>
